@@ -14,6 +14,8 @@ import WalletPage from "./pages/WalletPage";
 import HelpPage from "./pages/HelpPage";
 import TermsPage from "./pages/TermsPage";
 import PayoutsPage from "./pages/PayoutsPage";
+import CreateLifafaPage from "./pages/CreateLifafaPage";
+import ClaimLifafaPage from "./pages/ClaimLifafaPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/help" element={<HelpPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/payouts" element={<PayoutsPage />} />
+            <Route path="/create-lifafa" element={<CreateLifafaPage />} />
+            <Route path="/claim-lifafa" element={<ClaimLifafaPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
