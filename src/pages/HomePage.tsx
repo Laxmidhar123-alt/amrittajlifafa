@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   PlusCircle, 
@@ -15,16 +14,12 @@ import BalanceCard from '@/components/BalanceCard';
 import ActionCard from '@/components/ActionCard';
 import LifafaCard from '@/components/LifafaCard';
 import BottomNav from '@/components/BottomNav';
-import AddTaskModal from '@/components/modals/AddTaskModal';
-import PostAdsModal from '@/components/modals/PostAdsModal';
 import { useUser } from '@/contexts/UserContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const { isAuthenticated } = useUser();
   const navigate = useNavigate();
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showAdsModal, setShowAdsModal] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/auth" replace />;
@@ -102,13 +97,13 @@ export default function HomePage() {
               icon={Send}
               label="Add Task (Channel)"
               description="Add Telegram channel task"
-              onClick={() => setShowTaskModal(true)}
+              onClick={() => navigate('/add-task')}
             />
             <LifafaCard
               icon={Megaphone}
               label="Post Ads"
               description="Promote your brand"
-              onClick={() => setShowAdsModal(true)}
+              onClick={() => navigate('/post-ads')}
             />
           </div>
         </motion.div>
@@ -139,10 +134,6 @@ export default function HomePage() {
       </div>
 
       <BottomNav />
-
-      {/* Modals */}
-      <AddTaskModal isOpen={showTaskModal} onClose={() => setShowTaskModal(false)} />
-      <PostAdsModal isOpen={showAdsModal} onClose={() => setShowAdsModal(false)} />
     </div>
   );
 }
