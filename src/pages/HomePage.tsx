@@ -15,17 +15,14 @@ import BalanceCard from '@/components/BalanceCard';
 import ActionCard from '@/components/ActionCard';
 import LifafaCard from '@/components/LifafaCard';
 import BottomNav from '@/components/BottomNav';
-import ClaimLifafaModal from '@/components/modals/ClaimLifafaModal';
-import MakeLifafaModal from '@/components/modals/MakeLifafaModal';
 import AddTaskModal from '@/components/modals/AddTaskModal';
 import PostAdsModal from '@/components/modals/PostAdsModal';
 import { useUser } from '@/contexts/UserContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 export default function HomePage() {
   const { isAuthenticated } = useUser();
-  const [showClaimModal, setShowClaimModal] = useState(false);
-  const [showMakeModal, setShowMakeModal] = useState(false);
+  const navigate = useNavigate();
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showAdsModal, setShowAdsModal] = useState(false);
 
@@ -91,15 +88,15 @@ export default function HomePage() {
           <div className="space-y-3">
             <LifafaCard
               icon={Gift}
-              label="Claim Lifafa"
+              label="Claim Channel Lifafa"
               description="Enter code to claim reward"
-              onClick={() => setShowClaimModal(true)}
+              onClick={() => navigate('/claim-lifafa')}
             />
             <LifafaCard
               icon={PenSquare}
-              label="Make Lifafa"
-              description="Create & share with friends"
-              onClick={() => setShowMakeModal(true)}
+              label="Create Lifafa"
+              description="Create & share with channel"
+              onClick={() => navigate('/create-lifafa')}
             />
             <LifafaCard
               icon={Send}
@@ -144,8 +141,6 @@ export default function HomePage() {
       <BottomNav />
 
       {/* Modals */}
-      <ClaimLifafaModal isOpen={showClaimModal} onClose={() => setShowClaimModal(false)} />
-      <MakeLifafaModal isOpen={showMakeModal} onClose={() => setShowMakeModal(false)} />
       <AddTaskModal isOpen={showTaskModal} onClose={() => setShowTaskModal(false)} />
       <PostAdsModal isOpen={showAdsModal} onClose={() => setShowAdsModal(false)} />
     </div>
