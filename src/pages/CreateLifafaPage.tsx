@@ -9,7 +9,7 @@ import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
 
-type GameType = 'dice' | 'toss' | 'scratch';
+type GameType = 'none' | 'dice' | 'toss' | 'scratch';
 
 export default function CreateLifafaPage() {
   const navigate = useNavigate();
@@ -23,10 +23,11 @@ export default function CreateLifafaPage() {
     totalUsers: '',
     channelName: '',
     redirectLink: '',
-    gameType: 'dice' as GameType,
+    gameType: 'none' as GameType,
   });
 
   const gameOptions: { type: GameType; label: string; icon: React.ReactNode; color: string }[] = [
+    { type: 'none', label: 'None', icon: <Gift className="w-5 h-5" />, color: 'bg-muted-foreground' },
     { type: 'dice', label: 'Dice', icon: <Gamepad2 className="w-5 h-5" />, color: 'bg-blue-500' },
     { type: 'toss', label: 'Coin Toss', icon: <Coins className="w-5 h-5" />, color: 'bg-yellow-500' },
     { type: 'scratch', label: 'Scratch Card', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
@@ -193,7 +194,7 @@ export default function CreateLifafaPage() {
             {/* Game Selection */}
             <div className="bg-card rounded-2xl p-4 shadow-card">
               <Label className="mb-3 block">Select Game Type</Label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {gameOptions.map(game => (
                   <motion.button
                     key={game.type}
