@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Gift, Gamepad2, Coins, Sparkles } from 'lucide-react';
+import { ArrowLeft, Gift, Gamepad2, Coins, Sparkles, Plus, X, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,12 @@ import { toast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
 
 type GameType = 'none' | 'dice' | 'toss' | 'scratch';
+
+interface VerifyChannel {
+  id: string;
+  link: string;
+  channelId: string;
+}
 
 export default function CreateLifafaPage() {
   const navigate = useNavigate();
@@ -24,7 +30,12 @@ export default function CreateLifafaPage() {
     channelName: '',
     redirectLink: '',
     gameType: 'none' as GameType,
+    giveawayCode: '',
+    referEarnAmount: '',
   });
+
+  const [verifyChannels, setVerifyChannels] = useState<VerifyChannel[]>([]);
+  const [newChannel, setNewChannel] = useState({ link: '', channelId: '' });
 
   const gameOptions: { type: GameType; label: string; icon: React.ReactNode; color: string }[] = [
     { type: 'none', label: 'None', icon: <Gift className="w-5 h-5" />, color: 'bg-muted-foreground' },
@@ -37,11 +48,30 @@ export default function CreateLifafaPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCreate = async () => {
-    const { title, perUserAmount, totalUsers, channelName, redirectLink } = formData;
+  const addVerifyChannel = () => {
+    if (!newChannel.link || !newChannel.channelId) {
+      toast({ title: 'Please fill both channel link and ID', variant: 'destructive' });
+      return;
+    }
     
-    if (!title || !perUserAmount || !totalUsers || !channelName || !redirectLink) {
-      toast({ title: 'Please fill all fields', variant: 'destructive' });
+    setVerifyChannels(prev => [...prev, { 
+      id: Math.random().toString(36).substr(2, 9),
+      link: newChannel.link,
+      channelId: newChannel.channelId
+    }]);
+    setNewChannel({ link: '', channelId: '' });
+    toast({ title: 'Channel added successfully!' });
+  };
+
+  const removeVerifyChannel = (id: string) => {
+    setVerifyChannels(prev => prev.filter(channel => channel.id !== id));
+  };
+
+  const handleCreate = async () => {
+    const { title, perUserAmount, totalUsers, channelName } = formData;
+    
+    if (!title || !perUserAmount || !totalUsers || !channelName) {
+      toast({ title: 'Please fill all required fields', variant: 'destructive' });
       return;
     }
 
@@ -74,6 +104,21 @@ export default function CreateLifafaPage() {
   const copyCode = () => {
     navigator.clipboard.writeText(generatedCode);
     toast({ title: 'Code copied!' });
+  };
+
+  const resetForm = () => {
+    setGeneratedCode('');
+    setFormData({ 
+      title: '', 
+      perUserAmount: '', 
+      totalUsers: '', 
+      channelName: '', 
+      redirectLink: '', 
+      gameType: 'none',
+      giveawayCode: '',
+      referEarnAmount: '',
+    });
+    setVerifyChannels([]);
   };
 
   if (!user) {
@@ -123,7 +168,7 @@ export default function CreateLifafaPage() {
               <Button onClick={copyCode} variant="outline" className="flex-1">
                 Copy Code
               </Button>
-              <Button onClick={() => { setGeneratedCode(''); setFormData({ title: '', perUserAmount: '', totalUsers: '', channelName: '', redirectLink: '', gameType: 'dice' }); }} className="flex-1 hero-gradient">
+              <Button onClick={resetForm} className="flex-1 hero-gradient">
                 Create Another
               </Button>
             </div>
@@ -135,10 +180,10 @@ export default function CreateLifafaPage() {
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            {/* Form Fields */}
+            {/* Basic Form Fields */}
             <div className="bg-card rounded-2xl p-4 shadow-card space-y-4">
               <div>
-                <Label htmlFor="title">Lifafa Title</Label>
+                <Label htmlFor="title">Lifafa Title *</Label>
                 <Input
                   id="title"
                   placeholder="e.g., New Year Bonus"
@@ -149,7 +194,7 @@ export default function CreateLifafaPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor="perUserAmount">Per User Amount (₹)</Label>
+                  <Label htmlFor="perUserAmount">Per User Amount (₹) *</Label>
                   <Input
                     id="perUserAmount"
                     type="number"
@@ -159,7 +204,7 @@ export default function CreateLifafaPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="totalUsers">Total Users</Label>
+                  <Label htmlFor="totalUsers">Total Users *</Label>
                   <Input
                     id="totalUsers"
                     type="number"
@@ -171,7 +216,7 @@ export default function CreateLifafaPage() {
               </div>
 
               <div>
-                <Label htmlFor="channelName">Channel Name</Label>
+                <Label htmlFor="channelName">Channel Name *</Label>
                 <Input
                   id="channelName"
                   placeholder="@yourchannel"
@@ -181,12 +226,93 @@ export default function CreateLifafaPage() {
               </div>
 
               <div>
-                <Label htmlFor="redirectLink">Redirect Link</Label>
+                <Label htmlFor="redirectLink">Redirect Link (Optional)</Label>
                 <Input
                   id="redirectLink"
                   placeholder="https://t.me/yourchannel"
                   value={formData.redirectLink}
                   onChange={e => handleInputChange('redirectLink', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Channel Verify Section */}
+            <div className="bg-card rounded-2xl p-4 shadow-card space-y-4">
+              <Label className="text-base font-semibold">Telegram Channel Verify</Label>
+              
+              {/* Warning Card */}
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  Add <span className="font-bold">@myverifyBot</span> to your channel before adding your channel to Lifafa channel verify
+                </p>
+              </div>
+
+              {/* Added Channels */}
+              {verifyChannels.length > 0 && (
+                <div className="space-y-2">
+                  {verifyChannels.map(channel => (
+                    <div key={channel.id} className="bg-muted rounded-lg p-3 flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{channel.channelId}</p>
+                        <p className="text-xs text-muted-foreground truncate">{channel.link}</p>
+                      </div>
+                      <button 
+                        onClick={() => removeVerifyChannel(channel.id)}
+                        className="p-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add New Channel */}
+              <div className="space-y-3">
+                <Input
+                  placeholder="Channel/Group Link (e.g., https://t.me/channel)"
+                  value={newChannel.link}
+                  onChange={e => setNewChannel(prev => ({ ...prev, link: e.target.value }))}
+                />
+                <Input
+                  placeholder="Channel ID (e.g., @mychannel)"
+                  value={newChannel.channelId}
+                  onChange={e => setNewChannel(prev => ({ ...prev, channelId: e.target.value }))}
+                />
+                <Button 
+                  onClick={addVerifyChannel}
+                  variant="outline" 
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Channel
+                </Button>
+              </div>
+            </div>
+
+            {/* Optional Fields */}
+            <div className="bg-card rounded-2xl p-4 shadow-card space-y-4">
+              <Label className="text-base font-semibold">Optional Settings</Label>
+              
+              <div>
+                <Label htmlFor="giveawayCode">Giveaway Code (Optional)</Label>
+                <Input
+                  id="giveawayCode"
+                  placeholder="e.g., NEWYEAR2024"
+                  value={formData.giveawayCode}
+                  onChange={e => handleInputChange('giveawayCode', e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="referEarnAmount">Refer & Earn Amount ₹ (Optional)</Label>
+                <Input
+                  id="referEarnAmount"
+                  type="number"
+                  placeholder="e.g., 5"
+                  value={formData.referEarnAmount}
+                  onChange={e => handleInputChange('referEarnAmount', e.target.value)}
                 />
               </div>
             </div>
