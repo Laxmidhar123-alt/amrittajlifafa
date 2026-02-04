@@ -5,15 +5,23 @@ import {
   Gift, 
   ShoppingBag, 
   Smartphone,
-  ArrowLeft,
-  Check
+  Check,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import BottomNav from '@/components/BottomNav';
 import { useUser } from '@/contexts/UserContext';
 import { Navigate, Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 const withdrawOptions = [
   { 
@@ -29,7 +37,7 @@ const withdrawOptions = [
     name: 'Amazon Gift Card', 
     icon: ShoppingBag, 
     minAmount: 100, 
-    color: 'hero-gradient',
+    color: 'from-orange-500 to-amber-500',
     description: 'Get Amazon shopping voucher'
   },
   { 
@@ -55,6 +63,7 @@ export default function WithdrawPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [upiId, setUpiId] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -63,6 +72,17 @@ export default function WithdrawPage() {
   }
 
   const selectedMethod = withdrawOptions.find(o => o.id === selectedOption);
+
+  const resetForm = () => {
+    setAmount('');
+    setUpiId('');
+    setEmail('');
+  };
+
+  const closeDialog = () => {
+    setSelectedOption(null);
+    resetForm();
+  };
 
   const handleSubmit = async () => {
     if (!selectedMethod) return;
@@ -87,6 +107,11 @@ export default function WithdrawPage() {
       return;
     }
 
+    if (selectedOption !== 'upi' && !email.includes('@')) {
+      toast({ title: 'Please enter valid email address', variant: 'destructive' });
+      return;
+    }
+
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -98,6 +123,8 @@ export default function WithdrawPage() {
     });
 
     setIsLoading(false);
+    setSelectedOption(null);
+    resetForm();
     setSuccess(true);
   };
 
@@ -119,7 +146,7 @@ export default function WithdrawPage() {
             </motion.div>
             <h1 className="text-2xl font-bold mb-2">Withdrawal Submitted!</h1>
             <p className="text-muted-foreground mb-2">
-              Your request for ₹{amount} has been submitted
+              Your withdrawal request has been submitted
             </p>
             <p className="text-sm text-muted-foreground mb-8">
               You'll receive it within 24-48 hours
@@ -141,124 +168,140 @@ export default function WithdrawPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-6"
+          className="mb-6"
         >
-          {selectedOption ? (
-            <button onClick={() => setSelectedOption(null)}>
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-          ) : null}
-          <div>
-            <h1 className="text-2xl font-bold">Withdraw</h1>
-            <p className="text-muted-foreground">
-              Balance: <span className="text-primary font-bold">₹{user?.balance.toLocaleString('en-IN')}</span>
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold">Withdraw</h1>
+          <p className="text-muted-foreground">
+            Balance: <span className="text-primary font-bold">₹{user?.balance.toLocaleString('en-IN')}</span>
+          </p>
         </motion.div>
 
-        {!selectedOption ? (
-          // Options Grid
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Choose withdrawal method
-            </p>
-            {withdrawOptions.map((option, index) => (
-              <motion.div
-                key={option.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                onClick={() => setSelectedOption(option.id)}
-                className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:shadow-elevated transition-shadow flex items-center gap-4"
-              >
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${option.color} flex items-center justify-center flex-shrink-0`}>
-                  <option.icon className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold">{option.name}</h3>
-                  <p className="text-sm text-muted-foreground">{option.description}</p>
-                  <p className="text-xs text-primary mt-1">Min: ₹{option.minAmount}</p>
-                </div>
-                <motion.div whileHover={{ x: 5 }} className="text-muted-foreground">
-                  →
-                </motion.div>
+        {/* Options Grid */}
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose withdrawal method
+          </p>
+          {withdrawOptions.map((option, index) => (
+            <motion.div
+              key={option.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => setSelectedOption(option.id)}
+              className="bg-card rounded-2xl p-4 shadow-card cursor-pointer hover:shadow-elevated transition-shadow flex items-center gap-4"
+            >
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${option.color} flex items-center justify-center flex-shrink-0`}>
+                <option.icon className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold">{option.name}</h3>
+                <p className="text-sm text-muted-foreground">{option.description}</p>
+                <p className="text-xs text-primary mt-1">Min: ₹{option.minAmount}</p>
+              </div>
+              <motion.div whileHover={{ x: 5 }} className="text-muted-foreground">
+                →
               </motion.div>
-            ))}
-          </div>
-        ) : (
-          // Withdrawal Form
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Withdrawal Dialog */}
+      <Dialog open={!!selectedOption} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-sm mx-auto rounded-2xl">
+          <DialogHeader>
             {selectedMethod && (
-              <div className={`bg-gradient-to-br ${selectedMethod.color} rounded-2xl p-6 mb-6 text-center`}>
-                <selectedMethod.icon className="w-12 h-12 mx-auto mb-3 text-white" />
-                <h2 className="text-xl font-bold text-white">{selectedMethod.name}</h2>
-                <p className="text-white/80 text-sm">Min: ₹{selectedMethod.minAmount}</p>
+              <div className={`w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br ${selectedMethod.color} flex items-center justify-center`}>
+                <selectedMethod.icon className="w-8 h-8 text-white" />
+              </div>
+            )}
+            <DialogTitle className="text-center">{selectedMethod?.name}</DialogTitle>
+            <DialogDescription className="text-center">
+              Min: ₹{selectedMethod?.minAmount}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {/* Amount Input */}
+            <div>
+              <Label htmlFor="amount">Amount (₹)</Label>
+              <Input
+                id="amount"
+                type="number"
+                placeholder={`Min ₹${selectedMethod?.minAmount}`}
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                className="h-12 text-lg font-bold rounded-xl mt-1"
+              />
+            </div>
+
+            {/* Quick Amount Buttons */}
+            <div className="grid grid-cols-4 gap-2">
+              {[100, 200, 500, 1000].map(amt => (
+                <button
+                  key={amt}
+                  onClick={() => setAmount(amt.toString())}
+                  className={`py-2 rounded-lg font-semibold text-sm transition-all ${
+                    amount === amt.toString()
+                      ? 'hero-gradient text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  ₹{amt}
+                </button>
+              ))}
+            </div>
+
+            {/* UPI ID for UPI option */}
+            {selectedOption === 'upi' && (
+              <div>
+                <Label htmlFor="upiId">VPA (UPI ID)</Label>
+                <Input
+                  id="upiId"
+                  placeholder="yourname@upi"
+                  value={upiId}
+                  onChange={e => setUpiId(e.target.value)}
+                  className="h-12 rounded-xl mt-1"
+                />
               </div>
             )}
 
-            <div className="space-y-4">
-              {selectedOption === 'upi' && (
-                <div>
-                  <label className="text-sm font-medium mb-2 block">UPI ID</label>
-                  <Input
-                    placeholder="yourname@upi"
-                    value={upiId}
-                    onChange={e => setUpiId(e.target.value)}
-                    className="h-14 text-base rounded-xl"
-                  />
-                </div>
-              )}
-
+            {/* Email for Gift Card options */}
+            {selectedOption !== 'upi' && (
               <div>
-                <label className="text-sm font-medium mb-2 block">Amount (₹)</label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
-                  type="number"
-                  placeholder={`Min ₹${selectedMethod?.minAmount}`}
-                  value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  className="h-14 text-xl font-bold rounded-xl"
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="h-12 rounded-xl mt-1"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Gift card code will be sent to this email
+                </p>
               </div>
+            )}
 
-              {/* Quick Amount Buttons */}
-              <div className="grid grid-cols-4 gap-2">
-                {[100, 200, 500, 1000].map(amt => (
-                  <button
-                    key={amt}
-                    onClick={() => setAmount(amt.toString())}
-                    className={`py-2 rounded-lg font-semibold transition-all ${
-                      amount === amt.toString()
-                        ? 'hero-gradient text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    }`}
-                  >
-                    ₹{amt}
-                  </button>
-                ))}
-              </div>
-
-              <Button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="w-full h-14 text-lg font-bold hero-gradient hover:opacity-90 rounded-xl mt-6"
-              >
-                {isLoading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1 }}
-                    className="w-6 h-6 border-2 border-primary-foreground border-t-transparent rounded-full"
-                  />
-                ) : (
-                  'Withdraw Now'
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </div>
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full h-12 text-lg font-bold hero-gradient hover:opacity-90 rounded-xl"
+            >
+              {isLoading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="w-6 h-6 border-2 border-primary-foreground border-t-transparent rounded-full"
+                />
+              ) : (
+                'Withdraw Now'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
